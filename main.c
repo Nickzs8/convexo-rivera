@@ -5,7 +5,7 @@
 
 
 typedef struct{
-    float x, y, angulo;
+    float x, y, angulo, convex;
 } stPto;
 
 void defVetor(int m, stPto *v[]) {
@@ -54,15 +54,17 @@ int convexo(int i, int j, stPto a[]) {
     return a[i].x * a[j].y - a[j].x * a[i].y;
 }
 
-void analiseConvexidade(int n, stPto vvx[]) {
+void analiseConvexidade(int n, stPto vvx[], stPto *vx[]) {
     // quando chegar no ultimo atribuir para o primeiro
     int i;
     for (i = 0; i < n; i++) {
         int w = convexo(i, (i + 1) % n, vvx);
         if (w < 0) {
+            (*vx)[(i+1)%n].convex = 0;
             printf("\nVertice %d eh concavo", i + 1);
         } else {
             printf("\nVertice %d eh convexo", i + 1);
+            (*vx)[(i+1)%n].convex = 1;
         }
     }
 }
@@ -131,32 +133,44 @@ void mostrarPoligono (int n, stPto vx[]) {
   printf("\n}\n");
 }
 
-void transformarEmPoligonoConvexo(int n, stPto vvx[], stPto vx[]) {
-    int i, j, w, concavo;
-   do {
-        concavo = 0;
-         for (i = 0; i < n; i++) {
-            w = convexo(i, (i + 1) % n, vvx);
+void transformarEmPoligonoConvexo(int *n, stPto *vvx[], stPto *vx[]) {
+    int i, j, k;
 
-            if (w < 0) {
-                concavo = 1;
+    for (i = 0; i < *n; i++) {
+        if ((*vx)[i].convex && (*vx)[(i + 1) % *n].convex) {
+            continue; 
+        } else if ((*vx)[i].convex) {
+            for (j = (i + 2) % *n; j < *n; j++) {
+                if ((*vx)[j].convex) {
+                    
+                    (*vx)[(i + 1) % *n].x = (*vx)[j].x;
+                    (*vx)[(i + 1) % *n].y = (*vx)[j].y;
 
-                for (int j = (i+1)%n; j < n - 1; j++) {
-                    vx[j].x = vx[j + 1].x;
-                    vx[j].y = vx[j + 1].y;
+                   
+                    for (k = i + 2; k < *n; k++) {
+                        (*vx)[k].x = (*vx)[k + (j - (i + 1))].x;
+                        (*vx)[k].y = (*vx)[k + (j - (i + 1))].y;
+                    }
+
+                    
+                    *n -= fabs(j - (i + 1));
+
+                   
+                    stPto *temp = realloc(*vx, (*n) * sizeof(stPto));
+                    if (temp == NULL) {
+                        exit(1); 
+                    }
+                    *vx = temp;
+
+                    break; 
                 }
-
-                n--;
-                converteVetorPolig(n, vx, &vvx);
-                vx = realloc(vx, n * sizeof(stPto));
-                vvx = realloc(vvx, n * sizeof(stPto));
-                break;
             }
         }
+    }
 
-   } while (concavo);
+    converteVetorPolig(*n, *vx, vvx);
     printf("\n");
-    mostrarPoligono(n, vx);
+    mostrarPoligono(*n, *vx);
 }
 
 int main() {
@@ -186,9 +200,9 @@ int main() {
     mostrarPoligono(n, vx);
 
     printf("\nConvexidade do poligono antes: ");
-    analiseConvexidade(n, vvx);
+    analiseConvexidade(n, vvx, &vx);
 
-    transformarEmPoligonoConvexo(n, vvx, vx);
+    transformarEmPoligonoConvexo(&n, &vvx, &vx);
 
     free(vx);
     free(vvx);
