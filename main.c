@@ -135,39 +135,32 @@ void mostrarPoligono (int n, stPto vx[]) {
 
 void transformarEmPoligonoConvexo(int *n, stPto *vvx[], stPto *vx[]) {
     int i, j, k;
-
+    
     for (i = 0; i < *n; i++) {
         if ((*vx)[i].convex && (*vx)[(i + 1) % *n].convex) {
             continue; 
         } else if ((*vx)[i].convex) {
             for (j = (i + 2) % *n; j < *n; j++) {
                 if ((*vx)[j].convex) {
-                    
                     (*vx)[(i + 1) % *n].x = (*vx)[j].x;
                     (*vx)[(i + 1) % *n].y = (*vx)[j].y;
 
-                   
                     for (k = i + 2; k < *n; k++) {
                         (*vx)[k].x = (*vx)[k + (j - (i + 1))].x;
                         (*vx)[k].y = (*vx)[k + (j - (i + 1))].y;
                     }
-
-                    
                     *n -= fabs(j - (i + 1));
-
-                   
                     stPto *temp = realloc(*vx, (*n) * sizeof(stPto));
+
                     if (temp == NULL) {
                         exit(1); 
                     }
                     *vx = temp;
-
                     break; 
                 }
             }
         }
     }
-
     converteVetorPolig(*n, *vx, vvx);
     printf("\n");
     mostrarPoligono(*n, *vx);
