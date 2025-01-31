@@ -3,13 +3,13 @@
 #include <math.h>
 
 typedef struct {
-    float x, y, angulo;
+    float x, y, angle; 
 } stPto;
 
-void defVetor(int m, stPto **v) {
+void defineVector(int m, stPto **v) {
     *v = (stPto *)malloc(m * sizeof(stPto));
     if (!*v) {
-        printf("Error in alocation. Vector is undefined");
+        printf("Error in allocation. Vector is undefined.\n");
         exit(1);
     }
     for (int i = 0; i < m; i++) {
@@ -18,7 +18,7 @@ void defVetor(int m, stPto **v) {
     }
 }
 
-void mostraVetor(int n, stPto vx[]) {
+void showVector(int n, stPto vx[]) {
     printf("\n");
     for (int i = 0; i < n; i++) {
         printf("(%.2f, %.2f) ", vx[i].x, vx[i].y);
@@ -26,10 +26,10 @@ void mostraVetor(int n, stPto vx[]) {
     printf("\n\n");
 }
 
-void converteVetorPolig(int n, stPto vx[], stPto **vvx) {
+void convertVector(int n, stPto vx[], stPto **vvx) {
     *vvx = (stPto *)malloc(n * sizeof(stPto));
     if (!*vvx) {
-        printf("Error in alocation. Vector is undefined.");
+        printf("Error in allocation. Vector is undefined.\n");
         exit(1);
     }
     for (int i = 0; i < n; i++) {
@@ -38,23 +38,23 @@ void converteVetorPolig(int n, stPto vx[], stPto **vvx) {
     }
 }
 
-int convexo(int i, int j, stPto a[]) {
+int convex(int i, int j, stPto a[]) {
     return a[i].x * a[j].y - a[j].x * a[i].y;
 }
 
-void analiseConvexidade(int n, stPto vvx[]) {
+void convexityAnalysis(int n, stPto vvx[]) {
     for (int i = 0; i < n; i++) {
-        int w = convexo(i, (i + 1) % n, vvx);
+        int w = convex(i, (i + 1) % n, vvx);
         if (w < 0) {
-            printf("\nVextex %d is concave", i + 1);
+            printf("\nVertex %d is concave", i + 1);
         } else {
-            printf("\n Vextex %d is convex", i + 1);
+            printf("\nVertex %d is convex", i + 1);
         }
     }
     printf("\n\n");
 }
 
-void poliOrigemCentro(int n, stPto **vx) {
+void polygonCenterOrigin(int n, stPto **vx) {
     stPto ccx = {0, 0};
     for (int i = 0; i < n; i++) {
         ccx.x += (*vx)[i].x;
@@ -68,21 +68,21 @@ void poliOrigemCentro(int n, stPto **vx) {
     }
 }
 
-void poliRegularEstrela(int n, stPto **vx) {
-    poliOrigemCentro(n, vx);
+void regularPolygonVertex(int n, stPto **vx) {
+    polygonCenterOrigin(n, vx);
     for (int i = 0; i < n; i++) {
         float norma = sqrt((*vx)[i].x * (*vx)[i].x + (*vx)[i].y * (*vx)[i].y);
-        (*vx)[i].angulo = acos((*vx)[i].x / norma) * 180 / M_PI;
+        (*vx)[i].angle = acos((*vx)[i].x / norma) * 180 / M_PI;
         if ((*vx)[i].y < 0) {
-            (*vx)[i].angulo = 360 - (*vx)[i].angulo;
+            (*vx)[i].angle = 360 - (*vx)[i].angle;
         }
     }
 }
 
-void ordenaVetorAng(int n, stPto **vx) {
+void orderAngles(int n, stPto **vx) {
     for (int i = 0; i < n - 1; i++) {
         for (int j = i + 1; j < n; j++) {
-            if ((*vx)[i].angulo > (*vx)[j].angulo) {
+            if ((*vx)[i].angle > (*vx)[j].angle) {
                 stPto temp = (*vx)[i];
                 (*vx)[i] = (*vx)[j];
                 (*vx)[j] = temp;
@@ -91,7 +91,7 @@ void ordenaVetorAng(int n, stPto **vx) {
     }
 }
 
-void mostrarPoligono(int n, stPto vx[]) {
+void showPolygon(int n, stPto vx[]) {
     printf("\nVectors = {\n");
     for (int i = 0; i < n; i++) {
         printf("    Vector[(%.2f, %.2f), (%.2f, %.2f)]", vx[i].x, vx[i].y, vx[(i + 1) % n].x, vx[(i + 1) % n].y);
@@ -102,55 +102,54 @@ void mostrarPoligono(int n, stPto vx[]) {
     printf("\n}\n");
 }
 
-void transformarEmPoligonoConvexo(int n, stPto **vvx, stPto **vx) {
-    int concavo;
+void transformConvexPolygon(int n, stPto **vvx, stPto **vx) {
+    int concave;
     do {
-        concavo = 0;
+        concave = 0;
         for (int i = 0; i < n; i++) {
-            if (convexo(i, (i + 1) % n, *vvx) < 0) {
-                concavo = 1;
+            if (convex(i, (i + 1) % n, *vvx) < 0) {
+                concave = 1;
                 for (int j = (i + 1) % n; j < n - 1; j++) {
                     (*vx)[j] = (*vx)[j + 1];
                 }
                 n--;
-                converteVetorPolig(n, *vx, vvx);
+                convertVector(n, *vx, vvx);
                 *vx = realloc(*vx, n * sizeof(stPto));
                 *vvx = realloc(*vvx, n * sizeof(stPto));
                 break;
             }
         }
-    } while (concavo);
-    mostrarPoligono(n, *vx);
+    } while (concave);
+    showPolygon(n, *vx);
 }
 
 int main() {
     int n;
     stPto *vx, *vvx;
-    printf("Enter the number of vertex: ");
+    printf("Enter the number of vertices: ");
     scanf("%d", &n);
     
-    defVetor(n, &vx);
-    printf("\nVertex of the polygon:");
+    defineVector(n, &vx);
+    printf("\nVertices of the polygon:");
+    showVector(n, vx);
+    convertVector(n, vx, &vvx);
+    regularPolygonVertex(n, &vx);
+    orderAngles(n, &vx);
     
-    mostraVetor(n, vx);
-    converteVetorPolig(n, vx, &vvx);
-    poliRegularEstrela(n, &vx);
-    ordenaVetorAng(n, &vx);
-    
-    printf("\n\nVertex of the regular ordered polygon:");
-    mostraVetor(n, vx);
+    printf("\n\nVertices of the regular ordered polygon:");
+    showVector(n, vx);
     
     printf("\nEdges of the polygon:");
-    mostraVetor(n, vvx);
+    showVector(n, vvx);
     
-    printf("List of original vectors");
-    mostrarPoligono(n, vx);
+    printf("List of original vectors:");
+    showPolygon(n, vx);
     
     printf("\nConvexity of the polygon before: ");
-    analiseConvexidade(n, vvx);
+    convexityAnalysis(n, vvx);
     
     printf("List of vectors of the new polygon:");
-    transformarEmPoligonoConvexo(n, &vvx, &vx);
+    transformConvexPolygon(n, &vvx, &vx);
     
     free(vx);
     free(vvx);
